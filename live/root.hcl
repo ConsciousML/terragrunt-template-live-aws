@@ -1,36 +1,31 @@
 locals {
-  # Automatically load account-level variables
-  project_vars = read_terragrunt_config(find_in_parent_folders("project.hcl"))
-
-  # Automatically load region-level variables
+  # Load AWS region variable
   region_vars = read_terragrunt_config(find_in_parent_folders("region.hcl"))
 
-  # Automatically load environment related variables (dev, staging, prod, ...)
+  # Load environment related variables (dev, staging, prod, ...)
   environment_vars = read_terragrunt_config(find_in_parent_folders("environment.hcl"))
 
-  # Extract the variables we need for easy access
-  gcp_project = local.project_vars.locals.project
-  gcp_region  = local.region_vars.locals.region
+  aws_region  = local.region_vars.locals.region
   environment = local.environment_vars.locals.environment
 }
 
+# Configure AWS backend for storing Terraform state files
 remote_state {
-  backend = "gcs"
+  backend = "s3"
   generate = {
     path      = "backend.tf"
     if_exists = "overwrite_terragrunt"
   }
   config = {
+    region = "${local.aws_region}"
 
-    project  = "${local.gcp_project}"
-    location = "eu"
+    # The bucket name is suffixed using the env name (i.e `dev`, `staging`, ect.)
+    # This allows to completely isolate states between environments
+    bucket = "tofu-state-${local.environment}"
 
-    bucket = "${local.gcp_project}-tofu-state-${local.environment}"
-    prefix = "${path_relative_to_include()}/tofu.tfstate"
-    gcs_bucket_labels = {
-      owner = "terragrunt"
-      name  = "tofu_state_storage"
-    }
+    # The state file path within the bucket, based on module's relative path to ensure each module has its own isolated state
+    key            = "${path_relative_to_include()}/tofu.tfstate"
+    dynamodb_table = "terragrunt_lock_table"
   }
 }
 
@@ -38,9 +33,8 @@ generate "provider" {
   path      = "providers.tf"
   if_exists = "overwrite"
   contents  = <<EOF
-provider "google" {
-  project = "${local.gcp_project}"
-  region = "${local.gcp_region}"
+provider "aws" {
+  region = "${local.aws_region}"
 }
 EOF
 }
@@ -51,9 +45,9 @@ generate "versions" {
   contents  = <<EOF
 terraform {
   required_providers {
-    google = {
-      source  = "hashicorp/google"
-      version = "~> 6.48"
+    aws = {
+      source  = "hashicorp/aws"
+      version = "~> 6.0"
     }
   }
 
@@ -64,13 +58,12 @@ EOF
 
 catalog {
   urls = [
-    "https://github.com/ConsciousML/terragrunt-template-catalog-gcp"
+    "https://github.com/ConsciousML/terragrunt-template-catalog-aws"
   ]
 }
 
 # Pass key variables to child configurations
 inputs = merge(
-  local.project_vars.locals,
   local.region_vars.locals,
   local.environment_vars.locals
 )

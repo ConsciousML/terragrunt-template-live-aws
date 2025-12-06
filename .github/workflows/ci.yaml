@@ -22,8 +22,8 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Install mise
-        uses: jdx/mise-action@v2.2.3
+      - name: Install Terragrunt and OpenTofu
+        uses: gruntwork-io/terragrunt-action@v3
 
       - name: Check if .hcl files are formated
         run: terragrunt hcl format --check
@@ -42,27 +42,16 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Install mise
-        uses: jdx/mise-action@v2.2.3
-
-      - name: Set up Deploy Key Terragrunt module pulls
-        uses: webfactory/ssh-agent@v0.9.1
+      # Installs all required tools (`mise.toml`)
+      # Authenticates with AWS
+      # Sets up deploy keys to pull external repositories when running Terragrunt
+      - uses: ./.github/actions/setup
         with:
-          ssh-private-key: |
-            ${{ secrets.DEPLOY_KEY_TG_STACK }}
+          deploy-keys: |
             ${{ secrets.DEPLOY_KEY_TG_LIVE }}
-
-      # Use Workflow Identity Federation to authenticate GitHub Actions with Google
-      # Terragrunt needs permissions from GCP to run plan and apply
-      - uses: 'google-github-actions/auth@v2'
-        with:
-          project_id: ${{ secrets.PROJECT_ID }}
-          workload_identity_provider: ${{ secrets.WIF_PROVIDER }}
-          service_account: ${{ secrets.WIF_SERVICE_ACCOUNT }}
-
-      # Install the gcloud SDK
-      - name: 'Set up Cloud SDK'
-        uses: 'google-github-actions/setup-gcloud@v2'
+            ${{ secrets.DEPLOY_KEY_TG_CATALOG }}
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: ${{ secrets.AWS_REGION }}
 
       - name: Install aha to convert plan output to html
         run: sudo apt-get install aha
@@ -151,31 +140,16 @@ jobs:
         if: steps.check-label-run.outputs.label_present == 'false' && steps.check-label-skip.outputs.label_present == 'false' 
         run: exit 1
 
-      # Use Workflow Identity Federation to authenticate GitHub Actions with Google
-      # Terragrunt needs permissions from GCP to run plan and apply
-      - uses: 'google-github-actions/auth@v2'
-        if: steps.check-label-skip.outputs.label_present == 'false'
+      # Installs all required tools (`mise.toml`)
+      # Authenticates with AWS
+      # Sets up deploy keys to pull external repositories when running Terragrunt
+      - uses: ./.github/actions/setup
         with:
-          project_id: ${{ secrets.PROJECT_ID }}
-          workload_identity_provider: ${{ secrets.WIF_PROVIDER }}
-          service_account: ${{ secrets.WIF_SERVICE_ACCOUNT }}
-
-      # Install the gcloud SDK
-      - name: 'Set up Cloud SDK'
-        if: steps.check-label-skip.outputs.label_present == 'false'
-        uses: 'google-github-actions/setup-gcloud@v2'
-
-      - name: Install mise
-        if: steps.check-label-skip.outputs.label_present == 'false'
-        uses: jdx/mise-action@v2.2.3
-
-      - name: Set up Deploy Key Terragrunt module pulls
-        if: steps.check-label-skip.outputs.label_present == 'false'
-        uses: webfactory/ssh-agent@v0.9.0
-        with:
-          ssh-private-key: |
-            ${{ secrets.DEPLOY_KEY_TG_STACK }}
+          deploy-keys: |
             ${{ secrets.DEPLOY_KEY_TG_LIVE }}
+            ${{ secrets.DEPLOY_KEY_TG_CATALOG }}
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: ${{ secrets.AWS_REGION }}
 
       - name: Run Terratest
         if: steps.check-label-skip.outputs.label_present == 'false'

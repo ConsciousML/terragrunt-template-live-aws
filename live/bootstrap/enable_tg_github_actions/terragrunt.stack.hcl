@@ -1,7 +1,7 @@
 locals {
   version = "main"
 
-  github_repo_name = "terragrunt-template-live-aws"
+  github_repo_name         = "terragrunt-template-live-aws"
   github_repo_catalog_name = "terragrunt-template-catalog-aws"
 }
 
@@ -21,21 +21,21 @@ stack "enable_tg_github_actions" {
       "arn:aws:iam::aws:policy/AmazonS3FullAccess",
       "arn:aws:iam::aws:policy/AmazonDynamoDBFullAccess"
     ]
-    github_branch           = "*"
+    github_branch = "*"
     deploy_key_repositories = [
-        local.github_repo_name,
-        local.github_repo_catalog_name
+      local.github_repo_name,
+      local.github_repo_catalog_name
     ]
     deploy_key_secret_names = [
-        "DEPLOY_KEY_TG_LIVE",
-        "DEPLOY_KEY_TG_CATALOG"
+      "DEPLOY_KEY_TG_LIVE",
+      "DEPLOY_KEY_TG_CATALOG"
     ]
-    deploy_key_title        = "Terragrunt Live Deploy Key"
-    
+    deploy_key_title = "Terragrunt Live Deploy Key"
+
     # OIDC provider must be unique and is created in the catalog template
     create_oidc_provider = false
-    oidc_url                = "https://token.actions.githubusercontent.com"
-    oidc_client_id_list     = ["sts.amazonaws.com"]
-    oidc_thumbprint_list    = []
+    oidc_url             = "https://token.actions.githubusercontent.com"
+    oidc_client_id_list  = ["sts.amazonaws.com"]
+    oidc_thumbprint_list = []
   }
 }

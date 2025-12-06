@@ -71,27 +71,16 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4 
 
-      - name: Install mise
-        uses: jdx/mise-action@v2.2.3
-
-      - name: Set up Deploy Key Terragrunt module pulls
-        uses: webfactory/ssh-agent@v0.9.1
+      # Installs all required tools (`mise.toml`)
+      # Authenticates with AWS
+      # Sets up deploy keys to pull external repositories when running Terragrunt
+      - uses: ./.github/actions/setup
         with:
-          ssh-private-key: |
-            ${{ secrets.DEPLOY_KEY_TG_STACK }}
+          deploy-keys: |
             ${{ secrets.DEPLOY_KEY_TG_LIVE }}
-
-      # Use Workflow Identity Federation to authenticate GitHub Actions with Google
-      # Terragrunt needs permissions from GCP to run apply
-      - uses: 'google-github-actions/auth@v2'
-        with:
-          project_id: ${{ secrets.PROJECT_ID }}
-          workload_identity_provider: ${{ secrets.WIF_PROVIDER }}
-          service_account: ${{ secrets.WIF_SERVICE_ACCOUNT }}
-
-      # Install the gcloud SDK
-      - name: 'Set up Cloud SDK'
-        uses: 'google-github-actions/setup-gcloud@v2'
+            ${{ secrets.DEPLOY_KEY_TG_CATALOG }}
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: ${{ secrets.AWS_REGION }}   
 
       - name: Terragrunt apply on prod
         run: |

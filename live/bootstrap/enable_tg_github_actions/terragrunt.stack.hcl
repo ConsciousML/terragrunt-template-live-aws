@@ -1,42 +1,41 @@
 locals {
-  version = "v0.1.0"
+  version = "main"
+
+  github_repo_name = "terragrunt-template-live-aws"
+  github_repo_catalog_name = "terragrunt-template-catalog-aws"
 }
 
 stack "enable_tg_github_actions" {
-  source = "github.com/ConsciousML/terragrunt-template-catalog-gcp//stacks/enable_tg_github_actions?ref=${local.version}"
-  path   = "enable_tg_github_actions"
-
+  source = "github.com/ConsciousML/terragrunt-template-catalog-aws//stacks/enable_tg_github_actions?ref=${local.version}"
+  path   = "github_actions_bootstrap"
   values = {
-    # Change these values
-    github_username    = "ConsciousML"
-    current_repository = "terragrunt-template-live-gcp"
-
-    # Set github_token via environment variable: export TF_VAR_github_token="your_token_here"
-    github_token = get_env("TF_VAR_github_token")
-
-    # TODO: change version to `main` before merge
-    version = local.version
-
-    # Workload Identity Federation configuration
-    wif_pool_id                      = "gh-pool"
-    wif_display_name                 = "GitHub Pool Live"
-    wif_description                  = "Identity pool for GitHub deployments on the live Terragrunt repository"
-    wif_service_account_id           = "gh-actions-live"
-    wif_service_account_display_name = "GitHub Actions Service Account"
-    wif_service_account_description  = "Service account for GitHub Actions workflows"
-    wif_iam_roles = [
-      "roles/viewer",                          # Basic read access to all resources
-      "roles/storage.admin",                   # Full access to Cloud Storage (for Terraform state)
-      "roles/compute.networkAdmin",            # Create/manage VPCs, subnets, global addresses
-      "roles/compute.instanceAdmin.v1",        # Create/manage GCE instances
-      "roles/servicenetworking.networksAdmin", # Create private service connections
-      "roles/serviceusage.serviceUsageAdmin",  # Enable/disable GCP APIs
-      "roles/iam.serviceAccountUser"           # Use default Compute Engine service account
+    version          = local.version
+    github_username  = "ConsciousML"
+    github_repo_name = local.github_repo_name
+    github_token     = get_env("TF_VAR_github_token")
+    iam_role_name    = "github-actions-tg-live-role"
+    policy_arns = [
+      "arn:aws:iam::aws:policy/AmazonEC2FullAccess",
+      "arn:aws:iam::aws:policy/AmazonVPCFullAccess",
+      "arn:aws:iam::aws:policy/IAMFullAccess",
+      "arn:aws:iam::aws:policy/AmazonS3FullAccess",
+      "arn:aws:iam::aws:policy/AmazonDynamoDBFullAccess"
     ]
-
-    # Deploy key configuration
-    deploy_key_repositories = ["terragrunt-template-catalog-gcp", "terragrunt-template-live-gcp"]
-    deploy_key_secret_names = ["DEPLOY_KEY_TG_CATALOG", "DEPLOY_KEY_TG_LIVE"]
+    github_branch           = "*"
+    deploy_key_repositories = [
+        local.github_repo_name,
+        local.github_repo_catalog_name
+    ]
+    deploy_key_secret_names = [
+        "DEPLOY_KEY_TG_LIVE",
+        "DEPLOY_KEY_TG_CATALOG"
+    ]
     deploy_key_title        = "Terragrunt Live Deploy Key"
+    
+    # OIDC provider must be unique and is created in the catalog template
+    create_oidc_provider = false
+    oidc_url                = "https://token.actions.githubusercontent.com"
+    oidc_client_id_list     = ["sts.amazonaws.com"]
+    oidc_thumbprint_list    = []
   }
 }

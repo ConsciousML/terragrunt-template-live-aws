@@ -1,4 +1,4 @@
-# Terragrunt Template Live GCP
+# Terragrunt Template Live AWS
 
 [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![GitHub Release](https://img.shields.io/github/release/ConsciousML/terragrunt-template-live-aws.svg?style=flat)]()
@@ -12,7 +12,7 @@ A prod-ready Terragrunt Template for deploying multi-environment IaC on AWS
 This is a **live repository** for deploying infrastructure across multiple environments.
 
 This IaC production toolkit follows [Gruntwork's official patterns](https://github.com/gruntwork-io/terragrunt-infrastructure-live-example) by using two template repositories:
-- **Catalog repository**: Defines **what** can be deployed (reusable components: [modules, units, and stacks](https://github.com/ConsciousML/terragrunt-template-catalog-gcp))
+- **Catalog repository**: Defines **what** can be deployed (reusable components: [modules, units, and stacks](https://github.com/ConsciousML/terragrunt-template-catalog-aws))
 - **This repository** (live): Defines **where** and **how** catalog components are deployed in `dev`, `staging`, and `prod` environments with CI/CD
 
 

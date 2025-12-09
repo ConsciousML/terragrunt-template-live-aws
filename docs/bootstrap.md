@@ -1,10 +1,10 @@
-# GitHub Actions GCP Authentication
+# GitHub Actions AWS Authentication
 
 ## Overview
 
 Authenticates GitHub Actions with AWS to deploy infrastructure with Terragrunt in your workflows.
 
-The bootstrap pipeline has been develop in the [catalog repository](https://github.com/ConsciousML/terragrunt-template-catalog-aw). We will simply call the stack in the current repository (live).
+The bootstrap pipeline has been develop in the [catalog repository](https://github.com/ConsciousML/terragrunt-template-catalog-aws). We will simply call the stack in the current repository (live).
 
 For a detailed explanation of what this bootstrap stack does and its architecture, see the [catalog bootstrap documentation](https://github.com/ConsciousML/terragrunt-template-catalog-aws/tree/main/bootstrap/README.md).
 

@@ -2,22 +2,21 @@
 
 ## Overview
 
-Enables GitHub Actions deployment to Google Cloud Platform using Terragrunt with minimal manual steps.
+Authenticates GitHub Actions with AWS to deploy infrastructure with Terragrunt in your workflows.
 
-For a detailed explanation of what this bootstrap does and the architecture, see the [catalog bootstrap documentation](https://github.com/ConsciousML/terragrunt-template-catalog-gcp/tree/main/bootstrap/README.md).
+The bootstrap pipeline has been develop in the [catalog repository](https://github.com/ConsciousML/terragrunt-template-catalog-aw). We will simply call the stack in the current repository (live).
+
+For a detailed explanation of what this bootstrap stack does and its architecture, see the [catalog bootstrap documentation](https://github.com/ConsciousML/terragrunt-template-catalog-aws/tree/main/bootstrap/README.md).
 
 ## Prerequisites
-
-- GCP account with billing enabled
-- GCP project with Owner or Editor permissions
-- GitHub account with admin access to your repository
+- Same prerequisites as the [root README.md](../README.md#prerequisites)
 - Follow the [installation section](../README.md#installation)
 
 ## Configuration
 
-Open `live/bootstrap/enable_tg_github_actions/terragrunt.stack.hcl` and update it according to the [configuration documentation](https://github.com/ConsciousML/terragrunt-template-catalog-gcp/blob/main/bootstrap/README.md#configuration)
+Open `live/bootstrap/enable_tg_github_actions/terragrunt.stack.hcl` and update it according to the [configuration documentation](https://github.com/ConsciousML/terragrunt-template-catalog-aws/blob/main/bootstrap/README.md#configuration)
 
-Also update `live/bootstrap/project.hcl` and `live/bootstrap/region.hcl` with your GCP settings.
+Update the `live/bootstrap/region.hcl` to match your desired AWS region.
 
 ## Running the Bootstrap
 
@@ -39,7 +38,13 @@ Also update `live/bootstrap/project.hcl` and `live/bootstrap/region.hcl` with yo
    gh secret list
    ```
 
-   You should see: `PROJECT_ID`, `WIF_PROVIDER`, `WIF_SERVICE_ACCOUNT`, `DEPLOY_KEY_TG_CATALOG`, `DEPLOY_KEY_TG_LIVE`
+   You should see:
+   ```bash
+   AWS_REGION             about a minute ago
+   AWS_ROLE_ARN           about a minute ago
+   DEPLOY_KEY_TG_CATALOG  about a minute ago
+   DEPLOY_KEY_TG_LIVE     about a minute ago
+   ```
 
 ## Next Steps
 

@@ -7,7 +7,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestFooBarLocalStack(t *testing.T) {
+func TestStaging(t *testing.T) {
 	t.Parallel()
 
 	stackDir := "../live/staging/"

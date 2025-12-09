@@ -14,7 +14,7 @@ They ensure that:
 
 ### Continuous Integration (CI)
 
-Runs automatically on every pull request to `main` and consists of four jobs:
+Runs automatically on every pull request to `main` and is composed of four jobs:
 
 #### 1. HCL Format Check
 Validates that all Terragrunt (`.hcl`) files are properly formatted.
@@ -30,7 +30,7 @@ For the **production environment**, the plan output is converted to HTML and upl
 
 #### 3. Terratest
 Runs infrastructure tests when the `run-terratest` label is added to the PR:
-- Deploys actual infrastructure to the staging environment
+- Deploys the AWS infrastructure to the staging environment
 - Runs Go-based validation tests
 - Automatically destroys all test resources
 
@@ -44,33 +44,26 @@ Posts a comment with:
 
 ### Continuous Deployment (CD)
 
-Runs automatically when a PR is **merged to `main`**:
-- Deploys changes to the **production environment**
-- Runs `terragrunt stack generate`
-- Initializes backend
-- Applies all changes with `--non-interactive`
+Runs automatically when a PR is **merged to `main`** and deploys changes to the **production environment**.
 
-**Important**: CD automatically applies to production. Always review the production plan from CI before merging. If you want to skip the deployment, add the `skip-cd` before merging the PR.
+**Important**: CD automatically applies to production. Always review the production plan from CI before merging. If you want to skip the deployment, add the `skip-cd` tag before merging the PR.
 
 ## Setup
 
 ### Initial Setup
-Follow the [bootstrap guide](https://github.com/ConsciousML/terragrunt-template-catalog-gcp/tree/main/bootstrap/enable_tg_github_actions) once to:
-- Configure GitHub Actions authentication with GCP using Workload Identity Federation
-- Create the service account with required IAM roles
+Follow the [bootstrap guide](https://github.com/ConsciousML/terragrunt-template-catalog-aws/tree/main/bootstrap/enable_tg_github_actions) once to:
+- Configure GitHub Actions authentication with AWS
+- Create a IAM Role with the required policies
 - Set up deploy keys for private repository access
-- Configure GitHub secrets
+- Add GitHub secrets to be retrieved by GitHub Actions workflows.
 
 ## Using the CI/CD
-
-### Standard Pull Request Workflow
-
 1. Create a branch with your infrastructure changes:
    ```bash
    git checkout -b feature/update-instance-size
    ```
 
-2. Make changes into the Terraform code, units, and stacks in the catalog repository by following its [development workflow](https://github.com/ConsciousML/terragrunt-template-catalog-gcp/blob/main/docs/development.md).
+2. Make changes into the Terraform code, units, and stacks in the catalog repository by following its [development workflow](https://github.com/ConsciousML/terragrunt-template-catalog-aws/blob/main/docs/development.md).
 
 3. Next, update a stack configuration or add a new stack. For example:
 ```hcl
@@ -79,12 +72,12 @@ locals {
   version = "v0.0.3" # Change version, make sure to release on the catalog before
 }
 
-stack "vpc_gce" {
-  source = "github.com/ConsciousML/terragrunt-template-catalog-gcp//stacks/vpc_gce?ref=${local.version}"
+stack "vpc_ec2" {
+  source = "github.com/ConsciousML/terragrunt-template-catalog-aws//stacks/vpc_ec2?ref=${local.version}"
   path   = "infrastructure"
 
   values = {
-    machine_type = "e2-small"  # Changed from e2-micro
+    ec2_instance_type  = "t3.micro" 
     # all other parameters ...
   }
 }
@@ -92,18 +85,20 @@ stack "vpc_gce" {
 
 3. Push your code.
 
-4. Open a pull request. The CI pipeline runs automatically:
+4. Open a pull request. The CI pipeline runs automatically.
 
 5. Review the CI results:
-   - Check that all validation passes
+   - Check that all validation passes. If not, implement a fix, and go back to 3.
    - Download and review the **production plan artifact** (linked in PR comment)
    - The plan shows exactly what will be created, modified, or destroyed
 
-6. Add `run-terratest` label:
+6. Add the `run-terratest` label:
    - Tests deploy real infrastructure to staging
    - Validates functionality end-to-end
    - Automatically cleans up resources
    - Use this before merging significant changes
+
+7. Optionally, add the `skip-terratest` if you do not want to deploy the infrastructure on staging.
 
 7. Review and merge.
 

@@ -15,7 +15,7 @@ func TestStaging(t *testing.T) {
 		// Run from the examples subfolder where the terragrunt configs are
         TerragruntDir: stackDir,
 		// Optional: Set log level for cleaner output
-		TerragruntArgs: []string{"--log-level", "error", "--backend-bootstrap"},
+		TerragruntArgs: []string{"--log-level", "error"},
 	}
 
 	// Clean up all modules with "terragrunt destroy --all" at the end of the test.

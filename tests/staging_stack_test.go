@@ -1,10 +1,9 @@
 package tests
 
 import (
-	"os/exec"
 	"testing"
 
-	"github.com/stretchr/testify/require"
+	"github.com/gruntwork-io/terratest/modules/terragrunt"
 )
 
 func TestStaging(t *testing.T) {
@@ -12,31 +11,19 @@ func TestStaging(t *testing.T) {
 
 	stackDir := "../live/staging/"
 
-	t.Logf("Running test in stackDir: %s", stackDir)
+	options := &terragrunt.Options{
+		// Run from the examples subfolder where the terragrunt configs are
+        TerragruntDir: stackDir,
+		// Optional: Set log level for cleaner output
+		TerragruntArgs: []string{"--log-level", "error", "--backend-bootstrap"},
+	}
 
-	// Ensure destroy runs at the end, even if the test fails
-	t.Cleanup(func() {
-		t.Log("Running cleanup: terragrunt destroy...")
-		cmdDestroy := exec.Command("terragrunt", "run", "--all", "destroy", "--no-stack-generate", "--non-interactive")
-		cmdDestroy.Dir = stackDir
-		out, err := cmdDestroy.CombinedOutput()
-		t.Logf("Destroy output:\n%s", out)
-		require.NoError(t, err, "stack run destroy failed: %s", string(out))
-	})
+	// Clean up all modules with "terragrunt destroy --all" at the end of the test.
+	// DestroyAll respects the reverse dependency order.
+	defer terragrunt.DestroyAll(t, options)
 
-	// Generate
-	t.Log("Running: terragrunt stack generate...")
-	cmdGenerate := exec.Command("terragrunt", "stack", "generate")
-	cmdGenerate.Dir = stackDir
-	out, err := cmdGenerate.CombinedOutput()
-	t.Logf("Generate output:\n%s", out)
-	require.NoError(t, err, "stack generate failed: %s", string(out))
+	// Run "terragrunt apply --all". This applies all modules in dependency order.
+	terragrunt.ApplyAll(t, options)
 
-	// Apply
-	t.Log("Running: terragrunt run --all apply...")
-	cmdApply := exec.Command("terragrunt", "run", "--all", "apply", "--no-stack-generate", "--backend-bootstrap", "--non-interactive")
-	cmdApply.Dir = stackDir
-	out, err = cmdApply.CombinedOutput()
-	t.Logf("Apply output:\n%s", out)
-	require.NoError(t, err, "run --all apply failed: %s", string(out))
+    // Add additional Go tests here if necessary
 }

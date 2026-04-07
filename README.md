@@ -141,6 +141,8 @@ require.Equal(t, 200, resp.StatusCode)
 
 Tests run automatically in CI when the `run-terratest` label is added to your PR. See the [CI/CD guide](docs/ci_cd.md) for details.
 
+For more information on testing, read the [Terragrunt Catalog AWS documentation](https://github.com/ConsciousML/terragrunt-template-catalog-aws/blob/main/tests/README.md).
+
 ## Related Documentation
 
 - [Catalog Repository](https://github.com/ConsciousML/terragrunt-template-catalog-aws): Reusable IaC components

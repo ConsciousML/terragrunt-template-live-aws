@@ -16,21 +16,34 @@ permissions:
   id-token: 'write'
 
 jobs:
-  hcl-format-check:
+  code-quality-checks:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Install Terragrunt and OpenTofu
-        uses: gruntwork-io/terragrunt-action@v3
+      # Installs all required tools (`mise.toml`)
+      # Authenticates with AWS
+      # Sets up deploy keys to pull external repositories when running Terragrunt
+      - uses: ./.github/actions/setup
+        with:
+          deploy-keys: |
+            ${{ secrets.DEPLOY_KEY_TG_LIVE }}
+            ${{ secrets.DEPLOY_KEY_TG_CATALOG }}
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: ${{ secrets.AWS_REGION }}
 
-      - name: Check if .hcl files are formated
-        run: terragrunt hcl format --check
+      - name: Install pre-commit
+        run: pip install pre-commit
+
+      # Runs the checks as in pre-commits (tflint, ...)
+      # This prevents any discrepancies between the pre-commit checks and the CI checks 
+      - name: Run pre-commit hooks
+        uses: pre-commit/action@v3.0.1
 
   terragrunt-validate-plan:
     runs-on: ubuntu-latest
-    needs: hcl-format-check
+    needs: code-quality-checks
     strategy:
       matrix:
         env:
